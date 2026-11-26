@@ -1,6 +1,6 @@
 {
   "meta": {
-    "version": 1,
+    "version": 2,
     "updatedAt": "2026-11-26 12:00:00"
   },
   "settings": {
@@ -12,7 +12,7 @@
     "otMinMinutes": 0,
     "penaltyDayHours": 4,
     "absentDayHours": 8,
-    "leavePaid": true,
+    "leavePaid": false,
     "lateCounterReset": "monthly",
     "lateRules": [
       { "id": "r1", "type": "late_x", "factor": 2, "hours": 0, "label": "ضعف التأخير (×2)" },

@@ -11,6 +11,7 @@ import { t } from './i18n.js';
 const routes = {};
 let currentRoute = '';
 let currentCleanup = null;
+let beforeNavigateHandler = null;
 
 /**
  * Registers a route handler.
@@ -22,12 +23,32 @@ export function registerRoute(path, handler) {
 }
 
 /**
+ * Sets a before-navigate hook that can cancel or prompt before leaving.
+ * @param {((toHash: string) => Promise<boolean>|boolean)|null} fn
+ */
+export function setBeforeNavigate(fn) {
+  beforeNavigateHandler = fn;
+}
+
+/**
  * Resolves current hash route and handles navigation.
  */
 export async function handleRoute() {
   let hash = window.location.hash.split('?')[0] || '';
   if (!hash || hash === '#') {
     hash = '#attendance';
+  }
+
+  // 0. Check beforeNavigate guard if leaving current route
+  if (currentRoute && hash !== currentRoute && typeof beforeNavigateHandler === 'function') {
+    const canLeave = await beforeNavigateHandler(hash);
+    if (!canLeave) {
+      window.removeEventListener('hashchange', handleRoute);
+      window.location.hash = currentRoute;
+      setTimeout(() => window.addEventListener('hashchange', handleRoute), 50);
+      return;
+    }
+    beforeNavigateHandler = null;
   }
 
   // 1. Guard authentication

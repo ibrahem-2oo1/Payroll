@@ -44,27 +44,32 @@ Navigation: **bottom tab bar on phones** (Attendance, Penalties, Report, More), 
 | `otMinMinutes` | 0 | OT less than this = 0 |
 | `penaltyDayHours` | 4 | 1 penalty day deducts this many hours |
 | `absentDayHours` | 8 | One absent day deducts this many hours |
-| `leavePaid` | true | Leave day credited as a normal official day (no deduction) |
-| `lateCounterReset` | "monthly" | Late counter resets every month (`monthly`) or never (`never`) |
+| `leavePaid` | false | Leave day credited as 0 hours (no credit, no deduction) |
+| `lateCounterReset` | "monthly" | Late counter restarts at late #1 at the start of every month; cycles inside month |
 | `lateRules` | list | Ordered, cycling list (below) |
 | `users` | list | Username, password (salted SHA-256), role `admin` / `entry` |
 
 ### Late rules — editable, ordered, cycling list
 Each rule = `{ id, type, factor, hours, label }`. Admin can add, delete, edit, and drag/move up-down.
 
-| `type` | Deduction formula | Uses |
+| `type` | Rule amount formula | Uses |
 |---|---|---|
 | `late_x` | lateMinutes × factor | factor |
 | `remaining_x` | (shiftEnd − clockIn − breakMinutes) × factor | factor |
 | `fixed_hours` | hours × 60 | hours |
 | `full_day` | official day minutes (shiftEnd − shiftStart − break) | — |
 
-Default list (the user's rules):
-1. `late_x`, factor 2 → late time × 2
-2. `late_x`, factor 3 → late time × 3
-3. `remaining_x`, factor 0.5 → (remaining official time − break) ÷ 2
+**Total Loss Principle:** The rule amount is the **TOTAL loss**, including the late minutes already not worked.
+`lateDeduction = max(0, ruleAmount − lateMinutes)`.
+Example: shift 08:00, arrives 08:10, rule ×2 → total loss 20 min (10 min not worked + 10 min extra deduction), NOT 30.
 
-**Cycling:** the Nth late of the period uses rule `((N − 1) mod rules.length)`. With 3 rules: late 4 → rule 1, late 5 → rule 2, late 6 → rule 3 …
+Default list (the user's rules):
+1. `late_x`, factor 2 → total loss = late time × 2 (extra deduction = late time)
+2. `late_x`, factor 3 → total loss = late time × 3 (extra deduction = late time × 2)
+3. `remaining_x`, factor 0.5 → total loss = (remaining official time − break) ÷ 2
+
+**Cycling:** the Nth late of the month uses rule `((N − 1) mod rules.length)`. With 3 rules: late 4 → rule 1, late 5 → rule 2, late 6 → rule 3 …
+When `lateCounterReset = "monthly"`, the counter restarts at late #1 at the start of every month.
 
 ---
 
@@ -72,39 +77,59 @@ Default list (the user's rules):
 
 All values in minutes. `official = shiftEnd − shiftStart − breakMinutes`.
 
+**Timeline Normalization (Night Shifts & Midnight Crossing):**
+- If `shiftEnd <= shiftStart` (night shift): `shiftEnd += 1440`.
+- For present day inputs:
+  - If `out <= in`: `out += 1440` (crossed midnight).
+  - For night shift matching: if `in < shiftStart - 720`: `in += 1440`, `out += 1440`.
+
 **Present day** (in, out):
-1. If `out <= in` → `out += 1440` (crossed midnight).
-2. `worked = max(0, out − in − breakMinutes)`
-3. `lateRaw = max(0, in − shiftStart)`; `isLate = lateRaw > graceMinutes`; `late = isLate ? lateRaw : 0`
-4. If late → `lateNo` = count of previous lates in the same counter period + 1 → rule = `lateRules[(lateNo − 1) % len]` → `lateDeduction` (formula above, min 0, rounded to whole minutes).
-5. `otRaw = max(0, out − shiftEnd)`; if `otRaw < otMinMinutes` → 0; `ot = round(otRaw × otCountedPer60 / 60)`
-6. `regular = min(worked, official) ` (OT minutes are not counted twice)
-7. `net = regular + ot − lateDeduction`
+1. `worked = max(0, out − in − breakMinutes)`
+2. `lateRaw = max(0, in − shiftStart)`; `isLate = lateRaw > graceMinutes`; `late = isLate ? lateRaw : 0`
+3. If late (`late > 0`):
+   - `lateNo` must be `>= 1` (if `< 1`, default to `1`).
+   - `rule` = `lateRules[(lateNo − 1) % len]`
+   - Compute `ruleAmount` based on rule type:
+     - `late_x`: `round(late × factor)`
+     - `remaining_x`: `round(max(0, shiftEnd − in − breakMinutes) × factor)`
+     - `fixed_hours`: `hours × 60`
+     - `full_day`: `official`
+   - **Total loss principle:** `lateDeduction = max(0, round(ruleAmount − late))` (rule amount is the TOTAL loss, including late minutes already not worked).
+   - If not late: `lateNo = 0`, `ruleUsed = null`, `ruleAmount = 0`, `lateDeduction = 0`.
+4. `otRaw = max(0, out − shiftEnd)`; if `otRaw < otMinMinutes` → 0; `ot = round(otRaw × otCountedPer60 / 60)`
+5. **Regular time (BUG 1 FIX):**
+   `regular = max(0, min(out, shiftEnd) − max(in, shiftStart) − breakMinutes)`
+   Only time strictly inside the official window counts as regular. Overtime after `shiftEnd` must NOT compensate for late minutes.
+6. `net = regular + ot − lateDeduction`
+
+**Attendance storage rule:**
+NEVER store `lateNo` in attendance records. Always compute `lateNo` on the fly from the employee's records sorted by date (only counting days with status `"present"` and `late > grace`), so editing or inserting an earlier day correctly updates all subsequent days.
 
 **Absent day:** `net = −absentDayHours × 60` (shown as deduction).
-**Leave day:** `net = leavePaid ? official : 0`, no deduction.
+**Leave day:** `net = leavePaid ? official : 0` (default `leavePaid = false` → 0, no credit, no deduction).
 **Penalties:** for the month, `penaltyDeduction = Σ days × penaltyDayHours × 60`.
 
 **Month total per employee:**
 `netMonth = Σ day.net − penaltyDeduction`
 `salary = rate ? netMonth / 60 × rate : null`
 
-Every day result returns a breakdown object `{worked, late, lateNo, ruleUsed, lateDeduction, otRaw, ot, regular, net}` so the UI can show *why*.
+Every day result returns a breakdown object `{worked, late, lateNo, ruleUsed, ruleAmount, lateDeduction, otRaw, ot, regular, net}` so the UI can show *why*.
 
 ### Required test cases (`/tests/calc.test.html`, shows ✅/❌)
-Defaults: 08:00–16:00, break 30, grace 0, OT 52/60, rules [×2, ×3, (remaining−break)/2].
-- 08:00–16:00 → worked 450, late 0, ot 0, net 450
-- 08:10–16:00 (1st late) → deduction 20
-- 2nd late 08:10 → deduction 30
-- 3rd late 08:10 → (16:00−08:10 = 470 − 30) / 2 = 220
-- 4th late 08:10 → back to rule 1 → 20
-- 08:00–17:00 → ot raw 60 → ot 52
-- 08:00–16:30 → ot 26
-- absent → −480 (absentDayHours 8)
-- leave → +450
-- night shift 22:00–06:00 handled
-- new month resets late counter (when `monthly`)
-- deleting rule 3 → late 3 uses rule 1
+Defaults: 08:00–16:00, break 30, grace 0, OT 52/60, rules [late×2, late×3, (remaining−break)×0.5], absentDayHours 8:
+1. `08:00–16:00` → worked 450, net 450
+2. `08:10–16:00, late #1` → worked 440, regular 440, ruleAmount 20, lateDeduction 10, net 430
+3. `08:10–16:00, late #2` → worked 440, regular 440, ruleAmount 30, lateDeduction 20, net 420
+4. `08:10–16:00, late #3` → ruleAmount (470−30)/2 = 220, lateDeduction 210, net 230
+5. `08:10–16:00, late #4 in same month` → back to rule 1 → net 430
+6. `2 lates in Nov + 1 late on 1 Dec` → Dec late is #1 → net 430
+7. `08:00–17:00` → OT 52; `08:00–16:30` → OT 26
+8. `absent` → −480; `leave` → 0
+9. `night shift 22:00–06:00` handled (shift 22:00–06:00, break 30): worked 450, regular 450, net 450
+10. `deleting rule 3` → late #3 uses rule 1
+11. `lateNo < 1 safety test`: arrival 08:10 with `lateNo = 0` or missing defaults `lateNo = 1` safely
+12. `late arriving employee with overtime`: 08:10–17:00, late #1 → regular 440, OT 52, lateDeduction 10, net 482 (not 492)
+Plus additional edge cases (grace period, OT minimum threshold, penalty days with hourly rate, fixed_hours rule).
 
 ---
 
@@ -141,11 +166,11 @@ Defaults: 08:00–16:00, break 30, grace 0, OT 52/60, rules [×2, ×3, (remainin
 
 ```json
 {
-  "meta": { "version": 1, "updatedAt": "" },
+  "meta": { "version": 2, "updatedAt": "" },
   "settings": {
     "shiftStart": "08:00", "shiftEnd": "16:00", "breakMinutes": 30, "graceMinutes": 0,
     "otCountedPer60": 52, "otMinMinutes": 0,
-    "penaltyDayHours": 4, "absentDayHours": 8, "leavePaid": true,
+    "penaltyDayHours": 4, "absentDayHours": 8, "leavePaid": false,
     "lateCounterReset": "monthly",
     "lateRules": [
       { "id": "r1", "type": "late_x", "factor": 2 },

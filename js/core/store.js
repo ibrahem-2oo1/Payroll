@@ -20,7 +20,11 @@ export async function initStore() {
   if (localData) {
     try {
       cache = JSON.parse(localData);
+      const prevVer = cache.meta?.version || 1;
       ensureSchema(cache);
+      if (prevVer < 2) {
+        saveDB(cache);
+      }
       return cache;
     } catch (err) {
       console.warn('Corrupted localStorage data, re-seeding from /data/db.json', err);
@@ -45,17 +49,24 @@ export async function initStore() {
 }
 
 function ensureSchema(db) {
-  if (!db.meta) db.meta = { version: 1, updatedAt: new Date().toLocaleString() };
+  if (!db.meta) db.meta = { version: 2, updatedAt: new Date().toLocaleString() };
   if (!db.settings) db.settings = {};
   if (!Array.isArray(db.users)) db.users = [];
   if (!Array.isArray(db.employees)) db.employees = [];
   if (!Array.isArray(db.attendance)) db.attendance = [];
   if (!Array.isArray(db.penalties)) db.penalties = [];
+
+  // Migration for version < 2
+  if ((db.meta.version || 1) < 2) {
+    db.settings.leavePaid = false;
+    db.settings.lateCounterReset = 'monthly';
+    db.meta.version = 2;
+  }
 }
 
 function getFallbackSchema() {
   return {
-    meta: { version: 1, updatedAt: new Date().toLocaleString() },
+    meta: { version: 2, updatedAt: new Date().toLocaleString() },
     settings: {
       shiftStart: '08:00',
       shiftEnd: '16:00',
@@ -65,7 +76,7 @@ function getFallbackSchema() {
       otMinMinutes: 0,
       penaltyDayHours: 4,
       absentDayHours: 8,
-      leavePaid: true,
+      leavePaid: false,
       lateCounterReset: 'monthly',
       lateRules: [
         { id: 'r1', type: 'late_x', factor: 2, hours: 0, label: 'ضعف التأخير (×2)' },
