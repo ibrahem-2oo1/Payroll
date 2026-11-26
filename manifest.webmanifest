@@ -2,7 +2,7 @@
   "name": "Dawam - Attendance & Payroll",
   "short_name": "دوام",
   "description": "نظام تسجيل الحضور والرواتب للموظفين - Dawam Attendance & Payroll System",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",

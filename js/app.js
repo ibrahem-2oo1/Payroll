@@ -298,7 +298,7 @@ function showChangeOwnPasswordModal() {
 function registerServiceWorker() {
   if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
     const doRegister = () => {
-      navigator.serviceWorker.register('./sw.js').then((reg) => {
+      navigator.serviceWorker.register('./sw.js', { scope: './' }).then((reg) => {
         console.log('Dawam ServiceWorker registered successfully:', reg.scope);
       }).catch((err) => {
         console.warn('Dawam ServiceWorker registration failed:', err);

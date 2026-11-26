@@ -3,7 +3,7 @@
  * Cache-first strategy for offline support and PWA installability.
  */
 
-const CACHE_NAME = 'dawam-cache-v1.5.0';
+const CACHE_NAME = 'dawam-cache-v1.5.1';
 
 const PRECACHE_ASSETS = [
   './',
@@ -107,6 +107,10 @@ self.addEventListener('fetch', (event) => {
         }
 
         return networkResponse;
+      }).catch(async () => {
+        if (event.request.mode === 'navigate') {
+          return (await caches.match('./')) || (await caches.match('./index.html'));
+        }
       });
     })
   );
