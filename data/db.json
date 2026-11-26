@@ -31,14 +31,14 @@
     }
   ],
   "employees": [
-    { "id": "e1", "badge": "1001", "name": "أحمد المنصوري", "department": "الموارد البشرية", "rate": 50, "active": true },
-    { "id": "e2", "badge": "1002", "name": "سارة الشمري", "department": "تقنية المعلومات", "rate": 60, "active": true },
-    { "id": "e3", "badge": "1003", "name": "محمد القحطاني", "department": "المحاسبة", "rate": 55, "active": true },
-    { "id": "e4", "badge": "1004", "name": "فاطمة الزهراني", "department": "العمليات", "rate": 45, "active": true },
-    { "id": "e5", "badge": "1005", "name": "عمر العمودي", "department": "التسويق", "rate": 50, "active": true },
-    { "id": "e6", "badge": "1006", "name": "ريم الدوسري", "department": "الشؤون القانونية", "rate": 65, "active": true },
-    { "id": "e7", "badge": "1007", "name": "خالد الغامدي", "department": "المبيعات", "rate": 40, "active": true },
-    { "id": "e8", "badge": "1008", "name": "مريم الحربي", "department": "خدمة العملاء", "rate": 42, "active": true }
+    { "id": "e1", "badge": "1001", "name": "أحمد المنصوري", "department": "الموارد البشرية", "rate": 2500, "active": true },
+    { "id": "e2", "badge": "1002", "name": "سارة الشمري", "department": "تقنية المعلومات", "rate": 3500, "active": true },
+    { "id": "e3", "badge": "1003", "name": "محمد القحطاني", "department": "المحاسبة", "rate": 3000, "active": true },
+    { "id": "e4", "badge": "1004", "name": "فاطمة الزهراني", "department": "العمليات", "rate": 2750, "active": true },
+    { "id": "e5", "badge": "1005", "name": "عمر العمودي", "department": "التسويق", "rate": 2500, "active": true },
+    { "id": "e6", "badge": "1006", "name": "ريم الدوسري", "department": "الشؤون القانونية", "rate": 4000, "active": true },
+    { "id": "e7", "badge": "1007", "name": "خالد الغامدي", "department": "المبيعات", "rate": 2250, "active": true },
+    { "id": "e8", "badge": "1008", "name": "مريم الحربي", "department": "خدمة العملاء", "rate": 2000, "active": true }
   ],
   "attendance": [
     { "id": "att1", "employeeId": "e1", "date": "2026-11-26", "in": "08:00", "out": "16:00", "status": "present", "note": "" }

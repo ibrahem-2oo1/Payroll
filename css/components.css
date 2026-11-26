@@ -395,6 +395,49 @@
 }
 
 /* ==========================================================================
+   Employees Page Specific Responsive Classes
+   ========================================================================== */
+.employee-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.employee-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: 1rem;
+}
+
+.employee-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.employee-card-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-muted);
+}
+
+@media (min-width: 768px) {
+  .employees-mobile-view {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .employees-desktop-view {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
    Modals & Confirm Dialogs
    ========================================================================== */
 .modal-backdrop {

@@ -53,7 +53,7 @@
     "minutes": "دقيقة",
     "unitH": "س",
     "unitM": "د",
-    "currency": "ر.س"
+    "currency": "د.ع"
   },
   "attendance": {
     "title": "تسجيل الحضور اليومي",
@@ -99,11 +99,19 @@
     "editEmployee": "تعديل بيانات الموظف",
     "name": "اسم الموظف الكامل",
     "badge": "الرقم الوظيفي (فريد)",
-    "ratePlaceholder": "مثال: 50.00 (اختياري)",
+    "ratePlaceholder": "مثال: 2500 (اختياري)",
     "deactivate": "تعطيل",
     "activate": "تفعيل",
     "deactivateConfirm": "هل تريد تعطيل هذا الموظف؟",
-    "badgeExists": "الرقم الوظيفي مستخدم مسبقاً لموظف آخر"
+    "activateConfirm": "هل تريد تفعيل هذا الموظف مجدداً؟",
+    "badgeExists": "الرقم الوظيفي مستخدم مسبقاً لموظف آخر (نشط أو معطل)",
+    "nameRequired": "اسم الموظف مطلوب",
+    "badgeRequired": "الرقم الوظيفي مطلوب",
+    "filterAll": "الكل",
+    "filterActive": "النشطون فقط",
+    "filterInactive": "المعطلون",
+    "noEmployees": "لا يوجد موظفون مطابقون لخيارات البحث",
+    "totalEmployees": "إجمالي الموظفين"
   },
   "settings": {
     "title": "إعدادات النظام واللوائح",
@@ -136,6 +144,35 @@
     "unsavedChanges": "توجد تعديلات غير محفوظة!",
     "savedSuccess": "تم حفظ الإعدادات بنجاح"
   },
+  "users": {
+    "title": "إدارة المستخدمين والصلاحيات",
+    "addUser": "إضافة مستخدم جديد",
+    "editRole": "تعديل الصلاحية",
+    "username": "اسم المستخدم",
+    "role": "الصلاحية",
+    "roleAdmin": "مدير النظام (كامل الصلاحيات)",
+    "roleEntry": "مدخل بيانات (الحضور والجزاءات والتقرير)",
+    "roleAdminShort": "مدير",
+    "roleEntryShort": "مدخل بيانات",
+    "resetPassword": "إعادة تعيين الرمز",
+    "deleteUser": "حذف المستخدم",
+    "cannotDeleteSelf": "لا يمكنك حذف حسابك الحالي",
+    "cannotDeleteLastAdmin": "لا يمكن حذف آخر مدير نظام في التطبيق",
+    "cannotChangeOwnRole": "لا يمكنك تغيير صلاحية حسابك الحالي",
+    "cannotDemoteLastAdmin": "لا يمكن تغيير صلاحية آخر مدير نظام في التطبيق",
+    "usernameExists": "اسم المستخدم مستخدم مسبقاً",
+    "usernameRequired": "اسم المستخدم مطلوب",
+    "passwordRequired": "كلمة المرور مطلوبة (6 أحرف على الأقل)",
+    "confirmDeleteUser": "هل تريد بالتأكيد حذف هذا المستخدم؟",
+    "tempPassword": "كلمة المرور المؤقتة",
+    "mustChangeNotice": "سيُطلب من المستخدم تغيير كلمة المرور عند أول تسجيل دخول.",
+    "statusActive": "نشط",
+    "statusMustChange": "مطلوب تغيير الرمز",
+    "userAdded": "تمت إضافة المستخدم بنجاح",
+    "roleUpdated": "تم تحديث الصلاحية بنجاح",
+    "passwordReset": "تمت إعادة تعيين كلمة المرور بنجاح",
+    "userDeleted": "تم حذف المستخدم بنجاح"
+  },
   "report": {
     "title": "التقرير الشهري والرواتب",
     "selectMonth": "اختر الشهر",
@@ -159,14 +196,18 @@
     "title": "تسجيل الدخول للنظام",
     "username": "اسم المستخدم",
     "password": "كلمة المرور",
+    "currentPassword": "كلمة المرور الحالية",
     "newPassword": "كلمة المرور الجديدة",
     "confirmPassword": "تأكيد كلمة المرور الجديدة",
     "changePassword": "تغيير كلمة المرور",
+    "changeMyPassword": "تغيير كلمة المرور الخاصة بي",
     "submit": "دخول",
     "loginFailed": "خطأ: اسم المستخدم أو كلمة المرور غير صحيحة",
     "mustChangePassword": "يجب تغيير كلمة المرور للمتابعة عند الدخول لأول مرة",
     "passwordsDoNotMatch": "كلمتا المرور غير متطابقتين",
-    "passwordMinLength": "يجب ألا تقل كلمة المرور عن 6 أحرف"
+    "passwordMinLength": "يجب ألا تقل كلمة المرور عن 6 أحرف",
+    "currentPasswordIncorrect": "كلمة المرور الحالية غير صحيحة",
+    "unauthorized": "غير مصرح لك بالوصول إلى هذه الصفحة"
   },
   "toast": {
     "saved": "تم الحفظ بنجاح",

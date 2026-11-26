@@ -50,7 +50,7 @@ export async function handleRoute() {
   // 3. Guard roles
   const handler = routes[hash];
   if (handler?.roles && !handler.roles.includes(session?.role)) {
-    ui.toast(t('common.noData') || 'غير مسموح بهذا الإجراء', 'warning');
+    ui.toast(t('auth.unauthorized'), 'warning');
     window.location.hash = '#attendance';
     return;
   }
@@ -105,13 +105,11 @@ export function updateNavUI(activeHash, session) {
 
     // Role check for links
     const allowedRoles = link.getAttribute('data-roles');
-    if (allowedRoles && session) {
+    if (allowedRoles) {
       const allowed = allowedRoles.split(',').map(r => r.trim());
-      if (!allowed.includes(session.role) && session.role !== 'admin') {
-        link.style.display = 'none';
-      } else {
-        link.style.display = '';
-      }
+      const isAllowed = session && (allowed.includes(session.role) || session.role === 'admin');
+      const targetEl = link.closest('li') || link;
+      targetEl.style.display = isAllowed ? '' : 'none';
     }
   });
 
@@ -125,15 +123,18 @@ export function updateNavUI(activeHash, session) {
     }
   }
 
-  // Update user badge in header if exists
+  // Update user badge and change password buttons
   const userBadge = document.getElementById('user-badge');
-  if (userBadge) {
-    if (session) {
-      userBadge.textContent = `${session.username} (${session.role})`;
+  const changePwdBtns = document.querySelectorAll('[data-action="change-own-pwd"]');
+  if (session) {
+    if (userBadge) {
+      userBadge.textContent = `${session.username} (${session.role === 'admin' ? t('users.roleAdminShort') : t('users.roleEntryShort')})`;
       userBadge.style.display = 'inline-flex';
-    } else {
-      userBadge.style.display = 'none';
     }
+    changePwdBtns.forEach(btn => btn.style.display = '');
+  } else {
+    if (userBadge) userBadge.style.display = 'none';
+    changePwdBtns.forEach(btn => btn.style.display = 'none');
   }
 }
 

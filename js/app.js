@@ -94,6 +94,11 @@ function setupUIEventListeners() {
     });
   });
 
+  // Change own password buttons (desktop header & sidebar)
+  document.querySelectorAll('[data-action="change-own-pwd"]').forEach(btn => {
+    btn.addEventListener('click', showChangeOwnPasswordModal);
+  });
+
   // Logout buttons
   document.querySelectorAll('[data-action="logout"]').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -149,6 +154,9 @@ function showMobileMoreModal() {
           <span>⚙️</span> <span data-i18n="nav.settings">${i18n.t('nav.settings')}</span>
         </a>
       ` : ''}
+      <button type="button" class="btn btn-secondary" id="more-change-pwd" style="justify-content: flex-start;">
+        <span>🔑</span> <span data-i18n="auth.changeMyPassword">${i18n.t('auth.changeMyPassword')}</span>
+      </button>
       <button type="button" class="btn btn-secondary" id="more-toggle-theme" style="justify-content: flex-start;">
         <span class="theme-toggle-label">☀️</span>
         <span data-i18n="theme.toggle">${i18n.t('theme.toggle')}</span>
@@ -179,6 +187,11 @@ function showMobileMoreModal() {
     link.addEventListener('click', () => modalInstance.close());
   });
 
+  content.querySelector('#more-change-pwd')?.addEventListener('click', () => {
+    modalInstance.close();
+    showChangeOwnPasswordModal();
+  });
+
   content.querySelector('#more-toggle-theme')?.addEventListener('click', () => {
     toggleTheme();
   });
@@ -201,6 +214,81 @@ function showMobileMoreModal() {
     if (confirmed) {
       auth.logout();
     }
+  });
+}
+
+/**
+ * Shows "Change my password" modal for any logged-in user.
+ * Verifies current password before applying new password.
+ */
+function showChangeOwnPasswordModal() {
+  const session = auth.getSession();
+  if (!session) return;
+
+  const content = document.createElement('div');
+  content.innerHTML = `
+    <div class="form-group mb-3">
+      <label class="form-label">${i18n.t('auth.currentPassword')}</label>
+      <input type="password" id="own-current-pwd" class="input" required autocomplete="current-password" autofocus>
+    </div>
+    <div class="form-group mb-3">
+      <label class="form-label">${i18n.t('auth.newPassword')}</label>
+      <input type="password" id="own-new-pwd" class="input" minlength="6" required autocomplete="new-password">
+      <small class="text-muted">${i18n.t('auth.passwordMinLength')}</small>
+    </div>
+    <div class="form-group mb-3">
+      <label class="form-label">${i18n.t('auth.confirmPassword')}</label>
+      <input type="password" id="own-confirm-pwd" class="input" minlength="6" required autocomplete="new-password">
+    </div>
+    <div id="own-pwd-error" class="text-error mb-2" style="display: none;"></div>
+  `;
+
+  const modalInstance = ui.modal({
+    title: i18n.t('auth.changeMyPassword'),
+    content,
+    buttons: [
+      {
+        label: i18n.t('common.cancel'),
+        class: 'btn-secondary',
+        onClick: () => modalInstance.close()
+      },
+      {
+        label: i18n.t('common.save'),
+        class: 'btn-primary',
+        onClick: async () => {
+          const currentPwd = content.querySelector('#own-current-pwd').value;
+          const newPwd = content.querySelector('#own-new-pwd').value;
+          const confirmPwd = content.querySelector('#own-confirm-pwd').value;
+          const errEl = content.querySelector('#own-pwd-error');
+          errEl.style.display = 'none';
+
+          if (!currentPwd) {
+            errEl.textContent = i18n.t('auth.currentPasswordIncorrect');
+            errEl.style.display = 'block';
+            return;
+          }
+          if (!newPwd || newPwd.length < 6) {
+            errEl.textContent = i18n.t('auth.passwordMinLength');
+            errEl.style.display = 'block';
+            return;
+          }
+          if (newPwd !== confirmPwd) {
+            errEl.textContent = i18n.t('auth.passwordsDoNotMatch');
+            errEl.style.display = 'block';
+            return;
+          }
+
+          const res = await auth.changeOwnPassword(session.id, currentPwd, newPwd);
+          if (res.success) {
+            ui.toast(i18n.t('toast.saved'), 'success');
+            modalInstance.close();
+          } else {
+            errEl.textContent = i18n.t(res.error) || res.error;
+            errEl.style.display = 'block';
+          }
+        }
+      }
+    ]
   });
 }
 

@@ -2,6 +2,7 @@
  * Dawam - Authentication & Authorization
  * Salted SHA-256 using Web Crypto API.
  * Session maintained in sessionStorage.
+ * All persistent data operations strictly through store.js.
  */
 
 import * as store from './store.js';
@@ -39,12 +40,13 @@ export async function hashPassword(password, salt) {
  * @returns {Promise<{ success: boolean, user?: object, error?: string }>}
  */
 export async function login(username, password) {
-  if (!username || !password) {
+  const cleanUsername = username?.trim().toLowerCase();
+  if (!cleanUsername || !password) {
     return { success: false, error: 'auth.loginFailed' };
   }
 
   const users = store.list('users');
-  const user = users.find(u => u.username.toLowerCase() === username.trim().toLowerCase());
+  const user = users.find(u => u.username.trim().toLowerCase() === cleanUsername);
 
   if (!user) {
     return { success: false, error: 'auth.loginFailed' };
@@ -99,7 +101,7 @@ export function isAdmin() {
 }
 
 /**
- * Checks if user has specific role or admin.
+ * Checks if user has specific role or is admin.
  * @param {'admin'|'entry'} role
  * @returns {boolean}
  */
@@ -120,7 +122,7 @@ export function logout() {
 }
 
 /**
- * Changes a user's password and clears mustChange flag.
+ * Changes a user's password and clears mustChange flag (used for forced first login).
  * @param {string} userId
  * @param {string} newPassword
  * @returns {Promise<{ success: boolean, error?: string }>}
@@ -151,5 +153,172 @@ export async function changePassword(userId, newPassword) {
     window.dispatchEvent(new CustomEvent('dawam:authchange', { detail: { user: session } }));
   }
 
+  return { success: true };
+}
+
+/**
+ * Allows any logged-in user to change their own password, requiring current password verification.
+ * @param {string} userId
+ * @param {string} currentPassword
+ * @param {string} newPassword
+ * @returns {Promise<{ success: boolean, error?: string }>}
+ */
+export async function changeOwnPassword(userId, currentPassword, newPassword) {
+  if (!currentPassword) {
+    return { success: false, error: 'auth.currentPasswordIncorrect' };
+  }
+  if (!newPassword || newPassword.length < 6) {
+    return { success: false, error: 'auth.passwordMinLength' };
+  }
+
+  const user = store.get('users', userId);
+  if (!user) {
+    return { success: false, error: 'User not found' };
+  }
+
+  const currentComputedHash = await hashPassword(currentPassword, user.salt);
+  if (currentComputedHash !== user.hash) {
+    return { success: false, error: 'auth.currentPasswordIncorrect' };
+  }
+
+  const newSalt = generateSalt();
+  const newHash = await hashPassword(newPassword, newSalt);
+
+  store.update('users', userId, {
+    salt: newSalt,
+    hash: newHash,
+    mustChange: false
+  });
+
+  const session = getSession();
+  if (session && session.id === userId) {
+    session.mustChange = false;
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  }
+
+  return { success: true };
+}
+
+/**
+ * Creates a new user with unique username and salted password.
+ * @param {object} params
+ * @param {string} params.username
+ * @param {string} params.password
+ * @param {'admin'|'entry'} params.role
+ * @returns {Promise<{ success: boolean, user?: object, error?: string }>}
+ */
+export async function createUser({ username, password, role = 'entry' }) {
+  const cleanUsername = username?.trim();
+  if (!cleanUsername) {
+    return { success: false, error: 'users.usernameRequired' };
+  }
+
+  if (!password || password.length < 6) {
+    return { success: false, error: 'auth.passwordMinLength' };
+  }
+
+  // Case-insensitive uniqueness check
+  const users = store.list('users');
+  const exists = users.some(u => u.username.trim().toLowerCase() === cleanUsername.toLowerCase());
+  if (exists) {
+    return { success: false, error: 'users.usernameExists' };
+  }
+
+  const salt = generateSalt();
+  const hash = await hashPassword(password, salt);
+
+  const newUser = store.insert('users', {
+    username: cleanUsername,
+    salt,
+    hash,
+    role: role === 'admin' ? 'admin' : 'entry',
+    mustChange: true
+  });
+
+  return { success: true, user: newUser };
+}
+
+/**
+ * Updates a user's role with protection guards.
+ * @param {string} targetUserId
+ * @param {'admin'|'entry'} newRole
+ * @param {string} currentUserId
+ * @returns {{ success: boolean, error?: string }}
+ */
+export function updateUserRole(targetUserId, newRole, currentUserId) {
+  if (targetUserId === currentUserId) {
+    return { success: false, error: 'users.cannotChangeOwnRole' };
+  }
+
+  const target = store.get('users', targetUserId);
+  if (!target) {
+    return { success: false, error: 'User not found' };
+  }
+
+  // Guard: Cannot demote the last remaining admin
+  if (target.role === 'admin' && newRole !== 'admin') {
+    const adminCount = store.list('users').filter(u => u.role === 'admin').length;
+    if (adminCount <= 1) {
+      return { success: false, error: 'users.cannotDemoteLastAdmin' };
+    }
+  }
+
+  store.update('users', targetUserId, { role: newRole });
+  return { success: true };
+}
+
+/**
+ * Resets a user's password (by admin) and flags mustChange: true.
+ * @param {string} targetUserId
+ * @param {string} tempPassword
+ * @returns {Promise<{ success: boolean, error?: string }>}
+ */
+export async function resetUserPassword(targetUserId, tempPassword) {
+  if (!tempPassword || tempPassword.length < 6) {
+    return { success: false, error: 'auth.passwordMinLength' };
+  }
+
+  const target = store.get('users', targetUserId);
+  if (!target) {
+    return { success: false, error: 'User not found' };
+  }
+
+  const newSalt = generateSalt();
+  const newHash = await hashPassword(tempPassword, newSalt);
+
+  store.update('users', targetUserId, {
+    salt: newSalt,
+    hash: newHash,
+    mustChange: true
+  });
+
+  return { success: true };
+}
+
+/**
+ * Deletes a user with protection guards (cannot delete self, cannot delete last admin).
+ * @param {string} targetUserId
+ * @param {string} currentUserId
+ * @returns {{ success: boolean, error?: string }}
+ */
+export function deleteUser(targetUserId, currentUserId) {
+  if (targetUserId === currentUserId) {
+    return { success: false, error: 'users.cannotDeleteSelf' };
+  }
+
+  const target = store.get('users', targetUserId);
+  if (!target) {
+    return { success: false, error: 'User not found' };
+  }
+
+  // Guard: Cannot delete the last admin
+  if (target.role === 'admin') {
+    const adminCount = store.list('users').filter(u => u.role === 'admin').length;
+    if (adminCount <= 1) {
+      return { success: false, error: 'users.cannotDeleteLastAdmin' };
+    }
+  }
+
+  store.remove('users', targetUserId);
   return { success: true };
 }

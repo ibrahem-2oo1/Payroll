@@ -53,7 +53,7 @@
     "minutes": "Minutes",
     "unitH": "h",
     "unitM": "m",
-    "currency": "SAR"
+    "currency": "IQD"
   },
   "attendance": {
     "title": "Daily Attendance",
@@ -99,11 +99,19 @@
     "editEmployee": "Edit Employee",
     "name": "Full Name",
     "badge": "Badge Number (unique)",
-    "ratePlaceholder": "e.g. 50.00 (optional)",
+    "ratePlaceholder": "e.g. 2500 (optional)",
     "deactivate": "Deactivate",
     "activate": "Activate",
     "deactivateConfirm": "Deactivate this employee?",
-    "badgeExists": "Badge number is already used by another employee"
+    "activateConfirm": "Re-activate this employee?",
+    "badgeExists": "Badge number is already used by another employee (active or inactive)",
+    "nameRequired": "Employee name is required",
+    "badgeRequired": "Badge number is required",
+    "filterAll": "All",
+    "filterActive": "Active Only",
+    "filterInactive": "Inactive",
+    "noEmployees": "No employees found matching search",
+    "totalEmployees": "Total Employees"
   },
   "settings": {
     "title": "System & Policy Settings",
@@ -136,6 +144,35 @@
     "unsavedChanges": "You have unsaved changes!",
     "savedSuccess": "Settings saved successfully"
   },
+  "users": {
+    "title": "Users & Access Control",
+    "addUser": "Add New User",
+    "editRole": "Edit Role",
+    "username": "Username",
+    "role": "Role",
+    "roleAdmin": "Admin (Full Access)",
+    "roleEntry": "Data Entry (Attendance, Penalties, Report)",
+    "roleAdminShort": "Admin",
+    "roleEntryShort": "Data Entry",
+    "resetPassword": "Reset Password",
+    "deleteUser": "Delete User",
+    "cannotDeleteSelf": "You cannot delete your own account",
+    "cannotDeleteLastAdmin": "Cannot delete the last admin account",
+    "cannotChangeOwnRole": "You cannot change your own role",
+    "cannotDemoteLastAdmin": "Cannot demote the last admin account",
+    "usernameExists": "Username already exists",
+    "usernameRequired": "Username is required",
+    "passwordRequired": "Password is required (min 6 chars)",
+    "confirmDeleteUser": "Are you sure you want to delete this user?",
+    "tempPassword": "Temporary Password",
+    "mustChangeNotice": "User will be prompted to change password upon first login.",
+    "statusActive": "Active",
+    "statusMustChange": "Must Change Password",
+    "userAdded": "User created successfully",
+    "roleUpdated": "User role updated successfully",
+    "passwordReset": "Password reset successfully",
+    "userDeleted": "User deleted successfully"
+  },
   "report": {
     "title": "Monthly Report & Payroll",
     "selectMonth": "Select Month",
@@ -159,14 +196,18 @@
     "title": "Sign In to Dawam",
     "username": "Username",
     "password": "Password",
+    "currentPassword": "Current Password",
     "newPassword": "New Password",
     "confirmPassword": "Confirm New Password",
     "changePassword": "Change Password",
+    "changeMyPassword": "Change My Password",
     "submit": "Sign In",
     "loginFailed": "Invalid username or password",
     "mustChangePassword": "You must change your password on first login",
     "passwordsDoNotMatch": "Passwords do not match",
-    "passwordMinLength": "Password must be at least 6 characters"
+    "passwordMinLength": "Password must be at least 6 characters",
+    "currentPasswordIncorrect": "Current password is incorrect",
+    "unauthorized": "You are not authorized to access this page"
   },
   "toast": {
     "saved": "Saved successfully",
