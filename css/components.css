@@ -677,8 +677,48 @@
   transition: background var(--transition-fast);
 }
 
-.table-row-clickable:hover {
-  background-color: rgba(0, 240, 255, 0.1) !important;
+/* ==========================================================================
+   Penalties Page Specific Components
+   ========================================================================== */
+.penalties-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+  align-items: start;
 }
+
+@media (min-width: 900px) {
+  .penalties-grid {
+    grid-template-columns: 420px 1fr;
+  }
+}
+
+.penalties-summary-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: var(--space-md);
+}
+
+.penalty-card-mobile {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .penalties-mobile-view {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .penalties-desktop-view {
+    display: none !important;
+  }
+}
+
 
 

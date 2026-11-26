@@ -18,6 +18,23 @@ export function toLocalDate(date = null) {
 }
 
 /**
+ * Returns a standardized local timestamp "YYYY-MM-DD HH:mm:ss" using local getters.
+ * Strictly avoids toISOString() or toLocaleString() for sortability and consistency.
+ * @param {Date|null} [date=null]
+ * @returns {string} "YYYY-MM-DD HH:mm:ss"
+ */
+export function nowLocalStamp(date = null) {
+  const d = date instanceof Date ? date : new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const hours = String(d.getHours()).padStart(2, '0');
+  const mins = String(d.getMinutes()).padStart(2, '0');
+  const secs = String(d.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${mins}:${secs}`;
+}
+
+/**
  * Converts "HH:MM" (24h) to minutes from midnight.
  * @param {string} hhmm
  * @returns {number} minutes (0 to 1439)

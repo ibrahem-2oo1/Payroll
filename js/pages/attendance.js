@@ -18,9 +18,11 @@ import * as ui from '../core/ui.js';
 import { toLocalDate, addDays, getWeekdayName, minToHoursLabel, hhmmToMin } from '../core/dates.js';
 import { calcDay, getLateNoForDate } from '../engine/calc.js';
 import { createEmployeeSearch } from '../core/employee-search.js';
+import { createDateBar } from '../core/date-bar.js';
 
 let currentContainer = null;
 let employeeSearchInstance = null;
+let dateBarInstance = null;
 
 // Page state
 let selectedDate = toLocalDate();
@@ -63,40 +65,19 @@ export function mount(container) {
       employeeSearchInstance.destroy();
       employeeSearchInstance = null;
     }
+    if (dateBarInstance) {
+      dateBarInstance.destroy();
+      dateBarInstance = null;
+    }
   };
 }
 
 function render() {
   if (!currentContainer) return;
 
-  const lang = getLang();
-  const today = toLocalDate();
-  const isFuture = selectedDate > today;
-  const weekdayName = getWeekdayName(selectedDate, lang);
-
   currentContainer.innerHTML = `
-    <!-- Top Date Stepper Bar -->
-    <div class="date-bar">
-      <div class="date-stepper">
-        <button type="button" class="btn btn-secondary btn-sm" id="btn-date-prev" title="${t('common.prev')}">
-          ◀
-        </button>
-        <input type="date" class="input font-num" id="input-attendance-date" value="${selectedDate}" style="max-width: 155px; height: 38px;">
-        <button type="button" class="btn btn-secondary btn-sm" id="btn-date-next" title="${t('common.next')}">
-          ▶
-        </button>
-        <button type="button" class="btn btn-secondary btn-sm" id="btn-date-today" style="font-size: 0.8rem;">
-          ${t('common.today')}
-        </button>
-      </div>
-
-      <div style="display: flex; align-items: center; gap: 0.5rem;">
-        <span class="text-cyan font-bold" id="weekday-display" style="font-size: 1rem;">
-          📅 ${weekdayName}
-        </span>
-        ${isFuture ? `<span class="badge badge-late font-num" id="future-date-badge" style="font-size: 0.75rem;">⚠️ ${t('attendance.futureDateWarning')}</span>` : ''}
-      </div>
-    </div>
+    <!-- Top Date Stepper Bar Mount -->
+    <div id="date-bar-mount"></div>
 
     <!-- Main Responsive Grid (Desktop 2-col, Mobile 1-col) -->
     <div class="attendance-grid">
@@ -211,9 +192,27 @@ function render() {
     </div>
   `;
 
+  initDateBar();
   initEmployeeSearch();
   attachEventListeners();
   checkMidnightCrossing();
+}
+
+function initDateBar() {
+  const mountEl = currentContainer?.querySelector('#date-bar-mount');
+  if (!mountEl) return;
+
+  if (dateBarInstance) {
+    dateBarInstance.destroy();
+  }
+
+  dateBarInstance = createDateBar(mountEl, {
+    date: selectedDate,
+    onChange: (newDate) => {
+      selectedDate = newDate;
+      onDateChanged();
+    }
+  });
 }
 
 function initEmployeeSearch() {
@@ -435,6 +434,7 @@ function getRecordsCounterText() {
 function renderDayRecordsTable() {
   const allEmployees = store.list('employees');
   const allAttendance = store.list('attendance');
+  const allPenalties = store.list('penalties');
   const settings = store.getSettings();
   const lang = getLang();
 
@@ -493,35 +493,37 @@ function renderDayRecordsTable() {
         </thead>
         <tbody>
           ${filtered.map(({ record, employee, calc, lateNo }) => {
-            const isEmpSelected = selectedEmployee && selectedEmployee.id === employee?.id;
-            const empName = employee ? employee.name : '—';
-            const empBadge = employee ? employee.badge : '';
+    const isEmpSelected = selectedEmployee && selectedEmployee.id === employee?.id;
+    const empName = employee ? employee.name : '—';
+    const empBadge = employee ? employee.badge : '';
+    const hasPenalty = allPenalties.some(p => p.employeeId === employee?.id && p.date === selectedDate);
 
-            let statusBadge = '';
-            let timesText = '—';
-            if (record.status === 'present') {
-              timesText = `<span class="font-num">${record.in || ''} - ${record.out || ''}</span>`;
-              if (calc.late > 0) {
-                statusBadge = `<span class="badge badge-late font-num">${t('attendance.lateCount')} #${lateNo}</span>`;
-              } else {
-                statusBadge = `<span class="badge badge-present">${t('attendance.present')}</span>`;
-              }
-            } else if (record.status === 'absent') {
-              statusBadge = `<span class="badge badge-absent">${t('attendance.absent')}</span>`;
-            } else if (record.status === 'leave') {
-              statusBadge = `<span class="badge badge-leave">${t('attendance.leave')}</span>`;
-            }
+    let statusBadge = '';
+    let timesText = '—';
+    if (record.status === 'present') {
+      timesText = `<span class="font-num">${record.in || ''} - ${record.out || ''}</span>`;
+      if (calc.late > 0) {
+        statusBadge = `<span class="badge badge-late font-num">${t('attendance.lateCount')} #${lateNo}</span>`;
+      } else {
+        statusBadge = `<span class="badge badge-present">${t('attendance.present')}</span>`;
+      }
+    } else if (record.status === 'absent') {
+      statusBadge = `<span class="badge badge-absent">${t('attendance.absent')}</span>`;
+    } else if (record.status === 'leave') {
+      statusBadge = `<span class="badge badge-leave">${t('attendance.leave')}</span>`;
+    }
 
-            const netFormatted = calc ? `${minToHoursLabel(calc.net, lang)}` : '0';
-            const netColor = calc?.net >= (calc?.regular || 450)
-              ? 'text-green'
-              : (calc?.net > 0 ? 'text-cyan' : 'text-red');
+    const netFormatted = calc ? `${minToHoursLabel(calc.net, lang)}` : '0';
+    const netColor = calc?.net >= (calc?.regular || 450)
+      ? 'text-green'
+      : (calc?.net > 0 ? 'text-cyan' : 'text-red');
 
-            return `
+    return `
               <tr class="table-row-clickable ${isEmpSelected ? 'table-row-selected' : ''}" data-emp-id="${employee?.id}" style="${isEmpSelected ? 'background: rgba(0, 240, 255, 0.12);' : ''}">
                 <td>
                   <strong>${escapeHtml(empName)}</strong>
                   <span class="badge badge-leave font-num" style="margin-inline-start: 0.35rem; font-size: 0.72rem;">#${escapeHtml(empBadge)}</span>
+                  ${hasPenalty ? `<span class="badge badge-absent font-num" title="${t('penalties.penaltyBadge')}" style="margin-inline-start: 0.35rem; font-size: 0.7rem;">⚠️ ${t('penalties.penaltyBadge')}</span>` : ''}
                 </td>
                 <td>${statusBadge}</td>
                 <td>${timesText}</td>
@@ -530,7 +532,7 @@ function renderDayRecordsTable() {
                 </td>
               </tr>
             `;
-          }).join('')}
+  }).join('')}
         </tbody>
       </table>
     </div>

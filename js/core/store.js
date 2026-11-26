@@ -5,6 +5,8 @@
  * RULE: ALL data access in the entire app must go through this store.
  */
 
+import { nowLocalStamp } from './dates.js';
+
 const DB_KEY = 'dawam_db';
 const GH_TOKEN_KEY = 'dawam_gh_token';
 const GH_CONFIG_KEY = 'dawam_gh_config';
@@ -49,7 +51,7 @@ export async function initStore() {
 }
 
 function ensureSchema(db) {
-  if (!db.meta) db.meta = { version: 2, updatedAt: new Date().toLocaleString() };
+  if (!db.meta) db.meta = { version: 2, updatedAt: nowLocalStamp() };
   if (!db.settings) db.settings = {};
   if (!Array.isArray(db.users)) db.users = [];
   if (!Array.isArray(db.employees)) db.employees = [];
@@ -66,7 +68,7 @@ function ensureSchema(db) {
 
 function getFallbackSchema() {
   return {
-    meta: { version: 2, updatedAt: new Date().toLocaleString() },
+    meta: { version: 2, updatedAt: nowLocalStamp() },
     settings: {
       shiftStart: '08:00',
       shiftEnd: '16:00',
@@ -113,7 +115,7 @@ export function getDB() {
 export function saveDB(data) {
   cache = data;
   cache.meta = cache.meta || {};
-  cache.meta.updatedAt = new Date().toLocaleString();
+  cache.meta.updatedAt = nowLocalStamp();
   localStorage.setItem(DB_KEY, JSON.stringify(cache));
   window.dispatchEvent(new CustomEvent('dawam:datachange', { detail: { db: cache } }));
   return cache;
