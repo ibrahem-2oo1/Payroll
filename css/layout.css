@@ -1,0 +1,244 @@
+/**
+ * Dawam - Responsive Layout
+ * Bottom tab bar on phones (< 768px)
+ * Sidebar on tablet & desktop (≥ 768px)
+ * Mobile-first architecture, no horizontal page scroll.
+ */
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ==========================================================================
+   Header (App Bar)
+   ========================================================================== */
+.app-header {
+  height: var(--header-height);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: var(--space-md);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.brand-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
+  color: #05070d;
+  font-weight: 900;
+  font-family: var(--font-num);
+}
+
+.brand-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 0.05em;
+  background: linear-gradient(90deg, var(--neon-cyan), #ffffff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* ==========================================================================
+   Main Layout & Content Area
+   ========================================================================== */
+.app-main {
+  flex: 1;
+  padding: var(--space-md);
+  padding-bottom: calc(var(--bottom-bar-height) + var(--space-lg));
+  max-width: var(--max-content-width);
+  width: 100%;
+  margin-inline: auto;
+}
+
+/* ==========================================================================
+   Mobile Bottom Tab Bar (< 768px)
+   ========================================================================== */
+.bottom-nav {
+  position: fixed;
+  inset-block-end: 0;
+  inset-inline: 0;
+  height: var(--bottom-bar-height);
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 60;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.nav-tab {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--text-muted);
+  font-size: 0.725rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.nav-tab svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+
+.nav-tab:hover,
+.nav-tab.active {
+  color: var(--neon-cyan);
+}
+
+.nav-tab.active svg {
+  filter: drop-shadow(0 0 5px var(--neon-cyan));
+}
+
+/* Desktop Sidebar hidden on mobile */
+.sidebar {
+  display: none;
+}
+
+/* Hide navigation entirely when on login screen */
+.is-login-screen .bottom-nav,
+.is-login-screen .sidebar {
+  display: none !important;
+}
+
+.is-login-screen .app-main {
+  padding-bottom: var(--space-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   Tablet & Desktop Layout (≥ 768px)
+   ========================================================================== */
+@media (min-width: 768px) {
+  .bottom-nav {
+    display: none;
+  }
+
+  .app-shell {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) 1fr;
+    grid-template-rows: var(--header-height) 1fr;
+    grid-template-areas:
+      "sidebar header"
+      "sidebar main";
+  }
+
+  .app-header {
+    grid-area: header;
+  }
+
+  .sidebar {
+    grid-area: sidebar;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-surface);
+    border-inline-end: 1px solid var(--border-subtle);
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    padding: var(--space-md);
+    gap: var(--space-lg);
+    z-index: 55;
+  }
+
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--border-muted);
+  }
+
+  .sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    list-style: none;
+  }
+
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all var(--transition-fast);
+  }
+
+  .sidebar-link svg {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+  }
+
+  .sidebar-link:hover {
+    background: rgba(0, 240, 255, 0.08);
+    color: var(--neon-cyan);
+  }
+
+  .sidebar-link.active {
+    background: linear-gradient(90deg, rgba(0, 240, 255, 0.2), transparent);
+    color: var(--neon-cyan);
+    border-inline-start: 3px solid var(--neon-cyan);
+    box-shadow: var(--glow-cyan-sm);
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border-muted);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .app-main {
+    grid-area: main;
+    padding: var(--space-xl);
+    padding-bottom: var(--space-xl);
+  }
+}

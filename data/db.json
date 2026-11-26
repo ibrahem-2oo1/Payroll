@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "version": 1,
+    "updatedAt": "2026-11-26 12:00:00"
+  },
+  "settings": {
+    "shiftStart": "08:00",
+    "shiftEnd": "16:00",
+    "breakMinutes": 30,
+    "graceMinutes": 0,
+    "otCountedPer60": 52,
+    "otMinMinutes": 0,
+    "penaltyDayHours": 4,
+    "absentDayHours": 8,
+    "leavePaid": true,
+    "lateCounterReset": "monthly",
+    "lateRules": [
+      { "id": "r1", "type": "late_x", "factor": 2, "hours": 0, "label": "ضعف التأخير (×2)" },
+      { "id": "r2", "type": "late_x", "factor": 3, "hours": 0, "label": "ثلاثة أضعاف التأخير (×3)" },
+      { "id": "r3", "type": "remaining_x", "factor": 0.5, "hours": 0, "label": "نصف الوقت المتبقي" }
+    ]
+  },
+  "users": [
+    {
+      "id": "u1",
+      "username": "admin",
+      "salt": "dawam_salt_v1",
+      "hash": "2ae997bcc864e9bac40579a46209b02ee18243b14acb70989310f8a939c06afe",
+      "role": "admin",
+      "mustChange": true
+    }
+  ],
+  "employees": [
+    { "id": "e1", "badge": "1001", "name": "أحمد المنصوري", "department": "الموارد البشرية", "rate": 50, "active": true },
+    { "id": "e2", "badge": "1002", "name": "سارة الشمري", "department": "تقنية المعلومات", "rate": 60, "active": true },
+    { "id": "e3", "badge": "1003", "name": "محمد القحطاني", "department": "المحاسبة", "rate": 55, "active": true },
+    { "id": "e4", "badge": "1004", "name": "فاطمة الزهراني", "department": "العمليات", "rate": 45, "active": true },
+    { "id": "e5", "badge": "1005", "name": "عمر العمودي", "department": "التسويق", "rate": 50, "active": true },
+    { "id": "e6", "badge": "1006", "name": "ريم الدوسري", "department": "الشؤون القانونية", "rate": 65, "active": true },
+    { "id": "e7", "badge": "1007", "name": "خالد الغامدي", "department": "المبيعات", "rate": 40, "active": true },
+    { "id": "e8", "badge": "1008", "name": "مريم الحربي", "department": "خدمة العملاء", "rate": 42, "active": true }
+  ],
+  "attendance": [
+    { "id": "att1", "employeeId": "e1", "date": "2026-11-26", "in": "08:00", "out": "16:00", "status": "present", "note": "" }
+  ],
+  "penalties": []
+}

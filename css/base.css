@@ -1,0 +1,136 @@
+/**
+ * Dawam - Base Styles & CSS Reset
+ * Logical properties for RTL/LTR, typography, and accessibility.
+ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  background-color: var(--bg-app);
+  background-image:
+    radial-gradient(var(--grid-color) 1.5px, transparent 1.5px),
+    linear-gradient(to bottom, rgba(5, 7, 13, 0.6), var(--bg-app));
+  background-size: 24px 24px, 100% 100%;
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* RTL Typography defaults */
+[dir="rtl"] body,
+[lang="ar"] body {
+  font-family: var(--font-ar);
+}
+
+/* Numeric & Headline elements */
+.font-num,
+.stat-value,
+.badge-num,
+.time-display {
+  font-family: var(--font-num);
+  letter-spacing: 0.05em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+[dir="ltr"] h1, [dir="ltr"] h2, [dir="ltr"] h3 {
+  font-family: var(--font-num);
+  letter-spacing: 0.03em;
+}
+
+p {
+  margin-bottom: var(--space-sm);
+}
+
+a {
+  color: var(--neon-cyan);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  text-shadow: var(--glow-cyan-sm);
+}
+
+/* Input zoom prevention on iOS safari: min font-size 16px */
+input, select, textarea, button {
+  font-family: inherit;
+  font-size: 16px;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* High contrast & accessible focus outlines */
+:focus-visible {
+  outline: 2px solid var(--neon-cyan);
+  outline-offset: 2px;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-cyan);
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Utilities */
+.text-cyan { color: var(--neon-cyan) !important; }
+.text-magenta { color: var(--neon-magenta) !important; }
+.text-green { color: var(--neon-green) !important; }
+.text-amber { color: var(--neon-amber) !important; }
+.text-red { color: var(--neon-red) !important; }
+.text-muted { color: var(--text-muted) !important; }
+.text-error { color: var(--neon-red) !important; font-size: 0.875rem; }
+.text-center { text-align: center; }
+
+.mb-1 { margin-bottom: var(--space-xs); }
+.mb-2 { margin-bottom: var(--space-sm); }
+.mb-3 { margin-bottom: var(--space-md); }
+.mb-4 { margin-bottom: var(--space-lg); }
