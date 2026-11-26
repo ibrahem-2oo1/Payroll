@@ -115,11 +115,23 @@ export function addDays(dateStr, days) {
 }
 
 /**
- * Formats a date string for display in localized format.
+ * Gets the localized weekday name for a YYYY-MM-DD date.
  * @param {string} dateStr "YYYY-MM-DD"
  * @param {string} [lang='ar']
  * @returns {string}
  */
+export function getWeekdayName(dateStr, lang = 'ar') {
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dateObj = new Date(y, m - 1, d);
+  try {
+    const locale = lang === 'ar' ? 'ar-EG' : 'en-US';
+    return new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(dateObj);
+  } catch {
+    return '';
+  }
+}
+
 export function formatDateDisplay(dateStr, lang = 'ar') {
   if (!dateStr) return '';
   const [y, m, d] = dateStr.split('-').map(Number);

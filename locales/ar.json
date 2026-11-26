@@ -82,7 +82,18 @@
     "note": "ملاحظة (اختياري)",
     "leaveConfirm": "تأكيد تسجيل إجازة للموظف في هذا اليوم؟",
     "absentConfirm": "تأكيد تسجيل غياب للموظف في هذا اليوم؟",
-    "deleteConfirm": "هل تريد بالتأكيد حذف سجل الحضور هذا؟"
+    "deleteConfirm": "هل تريد بالتأكيد حذف سجل الحضور هذا؟",
+    "crossesMidnight": "يتجاوز منتصف الليل (+24 ساعة)",
+    "futureDateWarning": "تاريخ مستقبلي",
+    "overwriteConfirm": "يوجد سجل مسجل مسبقاً لهذا الموظف في هذا اليوم. هل تريد استبداله؟",
+    "recordedCounter": "سجلات اليوم: {recorded} من {total} موظفين نشطين",
+    "recordSaved": "تم حفظ سجل الحضور بنجاح",
+    "recordDeleted": "تم حذف سجل الحضور بنجاح",
+    "selectEmployeePrompt": "يرجى اختيار موظف للبدء",
+    "timesRequired": "وقت الحضور ووقت الانصراف كلاهما مطلوب",
+    "ruleAmount": "إجمالي الخسارة",
+    "extraDeduction": "الخصم الإضافي",
+    "ruleApplied": "القاعدة المطبقة"
   },
   "penalties": {
     "title": "سجل الجزاءات الإدارية",

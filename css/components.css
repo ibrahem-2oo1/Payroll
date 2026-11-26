@@ -594,3 +594,91 @@
   border: 1px solid var(--border-subtle);
 }
 
+/* ==========================================================================
+   Attendance Page Specific Components
+   ========================================================================== */
+.attendance-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .attendance-grid {
+    grid-template-columns: 440px 1fr;
+  }
+}
+
+.date-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-md);
+}
+
+.date-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.live-breakdown-card {
+  background: rgba(0, 240, 255, 0.03);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  margin-block: var(--space-md);
+}
+
+.stat-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.stat-box {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.65rem;
+}
+
+.stat-box-title {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.stat-box-val {
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.badge-midnight {
+  background: rgba(255, 176, 32, 0.15);
+  border-color: var(--neon-amber);
+  color: var(--neon-amber);
+  font-size: 0.775rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.table-row-clickable {
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.table-row-clickable:hover {
+  background-color: rgba(0, 240, 255, 0.1) !important;
+}
+
+
