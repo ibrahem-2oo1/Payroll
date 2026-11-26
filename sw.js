@@ -3,7 +3,7 @@
  * Cache-first strategy for offline support and PWA installability.
  */
 
-const CACHE_NAME = 'dawam-cache-v1.4.0';
+const CACHE_NAME = 'dawam-cache-v1.5.0';
 
 const PRECACHE_ASSETS = [
   './',
@@ -70,42 +70,43 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
+  const isSheetJS = url.hostname.includes('cdn.sheetjs.com');
+  const isFonts = url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com');
 
-  // Skip chrome-extension or external cross-origin APIs unless cached
-  if (url.origin !== self.location.origin && !url.hostname.includes('fonts.googleapis.com') && !url.hostname.includes('fonts.gstatic.com')) {
+  // Skip unsupported external cross-origin APIs
+  if (url.origin !== self.location.origin && !isFonts && !isSheetJS) {
     return;
   }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        // Return cached version immediately, and opportunistically fetch update in background
-        fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
-          }
-        }).catch(() => {/* Offline, ignore */});
+        // Opportunistically revalidate app files in background
+        if (url.origin === self.location.origin) {
+          fetch(event.request).then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
+            }
+          }).catch(() => {/* Offline, ignore */});
+        }
 
         return cachedResponse;
       }
 
-      // If not in cache, fetch from network and store copy in cache
+      // If not in cache, fetch from network and cache (including SheetJS and Google Fonts)
       return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+        if (!networkResponse || networkResponse.status !== 200) {
           return networkResponse;
         }
 
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
+        if (networkResponse.type === 'basic' || networkResponse.type === 'cors') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
 
         return networkResponse;
-      }).catch(() => {
-        // Fallback for navigation requests to offline app shell
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
       });
     })
   );

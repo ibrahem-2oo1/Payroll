@@ -1,56 +1,139 @@
 # Dawam (دوام) — Attendance & Payroll Hours App
 
-> PWA for employee attendance tracking, overtime calculations, late penalty cycles, and monthly payroll summaries.
-> Built with pure HTML5, CSS3 (Logical Properties, Cyber/Neon Dark/Light), and Modern Vanilla ES Modules.
-> Works 100% offline via Service Worker, installable on Android and iPhone home screens.
+> **نظام دوام (Dawam)**: تطبيق ويب تقدمي (PWA) متكامل وسريع لتسجيل الحضور والانصراف، احتساب ساعات العمل الإضافي، تطبيق دورات قواعد التأخير المتتالية، إدارة الجزاءات، وإصدار كشوفات الرواتب الشهرية وتصديرها إلى Excel.
+>
+> **Stack**: Plain HTML5 + CSS3 (Logical Properties, Cyber/Neon Dark/Light) + Vanilla ES Modules.
+> **No build step, no framework, no npm dependencies.** Runs directly on GitHub Pages or any static server.
 
 ---
 
-## 🔒 Security & Privacy Notice
-> **Important**: This is a client-side application running on GitHub Pages or any static file server using static JSON and `localStorage`. There is no backend database or real server security. Keep this repository **PRIVATE** if it contains real employee records, personal data, or wage details. User passwords stored in the JSON database are salted SHA-256 hashes, never plain text.
+## 🔒 Security & Privacy Notice (ملاحظة هامة للأمان والخصوصية)
+
+> **هام جداً**: هذا التطبيق يعتمد على بنية عميل محلية (Client-Side PWA) تعمل عبر المتصفح باستخدام `localStorage` وتخزين البيانات في ملف `data/db.json`. لا يوجد خادم خلفي مركزي (Backend Database).
+>
+> ⚠️ **يجب إبقاء مستودع GitHub خاصاً (PRIVATE REPOSITORY)** إذا كان يحتوي على بيانات حقيقية للموظفين، سجلات الحضور، أو تفاصيل الرواتب والأجور.
+>
+> كلمات مرور المستخدمين مشفرة ومملحة باستخدام خوارزمية **SHA-256** مع ملح عشوائي (Salted SHA-256)، ولا يتم تخزين أي كلمة مرور بنص صريح أبداً.
 
 ---
 
-## 🚀 Getting Started
+## 🚀 How to Run Locally (التشغيل المحلي)
 
-### Running Locally
-Because the app uses standard ES modules (`type="module"`), it must be served over HTTP/HTTPS rather than `file://`:
+نظراً لأن التطبيق يعتمد على وحدات جافاسكريبت القياسية (`type="module"` والـ Service Worker)، يجب تشغيله عبر خادم ويب محلي (HTTP/HTTPS) وليس بفتحه كملف مباشر (`file://`):
 
+### الخيار 1: باستخدام Python 3
 ```bash
-# Using python 3
+# افتح الطرفية في مجلد المشروع D:\HR-Payroll
 python -m http.server 8080
-
-# Or using Node http-server or npx serve
-npx serve .
 ```
 
-Open your browser at `http://localhost:8080`.
+### الخيار 2: باستخدام Node.js
+```bash
+npx serve .
+# أو
+npx http-server -p 8080 -c-1
+```
 
-### Default Credentials
-- **Username**: `admin`
-- **Password**: `admin123`
-*(On first login, admin will be prompted to set a new password).*
+### الخيار 3: باستخدام إضافة VS Code Live Server
+انقر بزر الفأرة الأيمن على `index.html` واصغط **Open with Live Server**.
 
----
-
-## 📱 Mobile PWA Installation
-1. Open the app URL in Chrome (Android) or Safari (iOS).
-2. Android: Tap the three dots menu → **Add to Home screen** / **Install app**.
-3. iOS: Tap the Share button → **Add to Home Screen**.
-4. The app runs in standalone fullscreen mode and works completely offline.
+افتح المتصفح على: `http://localhost:8080`.
 
 ---
 
-## 💾 Data Backup & Sync
-- **Local Storage**: Working data is stored in browser `localStorage`.
-- **Export/Import**: Full JSON database can be exported as a backup or imported anytime.
-- **GitHub Sync**: Connect to your private GitHub repository via Personal Access Token to commit and backup `data/db.json` automatically.
+## 🌐 Deploying to GitHub Pages (النشر على GitHub Pages)
+
+يمكنك استضافة التطبيق مجاناً وبكل سهولة على **GitHub Pages**:
+
+1. أنشئ مستودعاً جديداً على GitHub واجعله **خاصاً (Private)** لحماية بياناتك.
+2. ارفع ملفات المشروع إلى المستودع (`git push -u origin main`).
+3. في صفحة المستودع على GitHub:
+   - اذهب إلى **Settings** (الإعدادات).
+   - من القائمة الجانبية اختر **Pages**.
+   - تحت قسم **Build and deployment**:
+     - **Source**: اختر `Deploy from a branch`.
+     - **Branch**: اختر `main` أو `master` مع مسار `/ (root)`.
+     - اضغط **Save**.
+4. خلال دقيقة سيظهر رابط موقعك المباشر:
+   `https://<username>.github.io/<repo-name>/`
 
 ---
 
-## 🛠️ Architecture
-- `docs/PLAN.md` — Authoritative project specifications and rules.
-- `js/core/store.js` — Single source of truth for all data reads/writes.
-- `js/core/i18n.js` — Arabic (RTL default) and English (LTR) language system.
-- `js/engine/calc.js` — Pure calculation functions (all calculations in integer minutes).
-- `css/` — Cyber/Neon design system with CSS custom properties and logical properties.
+## 📱 Mobile PWA Installation (التثبيت على الهاتف)
+
+التطبيق يدعم معايير PWA بالكامل ويعمل بدون اتصال بالإنترنت (Offline 100%):
+
+### على أجهزة Android (Google Chrome)
+1. افتح رابط التطبيق في متصفح Chrome.
+2. اضغط على قائمة الخيارات (نقاط القائمة الثلاث ⠇ أعلى اليمين).
+3. اختر **تثبيت التطبيق (Install app)** أو **إضافة إلى الشاشة الرئيسية (Add to Home screen)**.
+4. سيظهر تطبيق "دوام" كأيقونة مستقلة تفتح في وضع الشاشة الكاملة (Standalone).
+
+### على أجهزة iPhone / iPad (Safari)
+1. افتح رابط التطبيق في متصفح Safari.
+2. اضغط على زر المشاركة (Share icon ⎙ بالأسفل).
+3. مرر لأسفل واختر **إضافة إلى الشاشة الرئيسية (Add to Home Screen)**.
+4. اضغط **إضافة (Add)**. سيعمل التطبيق بدون أشرطة المتصفح ويعمل دون اتصال بالإنترنت.
+
+---
+
+## 🔑 Default Credentials (بيانات الدخول الافتراضية)
+
+- **اسم المستخدم**: `admin`
+- **كلمة المرور الافتراضية**: `admin123`
+*(عند أول تسجيل دخول، سيُطلب من المدير إلزامياً تغيير كلمة المرور بكلمة مرور جديدة قوية لا تقل عن 6 أحرف).*
+
+---
+
+## ⚙️ Core Calculation Rules (قواعد محرك الاحتساب المعتمدة)
+
+1. **حساب الوقت النظامي (Regular Hours)**:
+   يحتسب فقط الوقت الواقع داخل نافذة الدوام الرسمي المحددة (`shiftStart` إلى `shiftEnd`). الوقت الإضافي بعد نهاية الوردية **لا يعوض** دقائق التأخير الصباحي.
+2. **مبدأ الخسارة الكلية في التأخير (Total Loss Principle)**:
+   مبلغ قاعدة التأخير هو إجمالي الخسارة شاملاً دقائق التأخير غير المشغولة:
+   $$\text{lateDeduction} = \max(0, \text{ruleAmount} - \text{lateMinutes})$$
+   *مثال*: وصول 08:10 (تأخير 10 د) على قاعدة ضعف التأخير (×2) $\rightarrow$ الخسارة الكلية 20 دقيقة (10 دقائق لم يعملها + 10 دقائق خصم إضافي).
+3. **دورة قواعد التأخير المتتالية (Cycling Late Rules)**:
+   تتدرج قواعد التأخير (القاعدة 1، ثم 2، ثم 3...)، وعند تجاوز آخر قاعدة تعود للدورة من القاعدة رقم 1. يُعاد ضبط العداد مع بداية كل شهر ميلادي (`lateCounterReset = "monthly"`).
+4. **احتساب الإضافي (Overtime)**:
+   كل 60 دقيقة عمل إضافي معتمد تحتسب كـ 52 دقيقة (خصم 8 دقائق)، مع إمكانية تحديد حد أدنى للدقائق.
+5. **الغياب والجزاءات**:
+   - يوم الغياب يخصم ساعات يوم الغياب (افتراضياً 8 ساعات). لا يتم خصمها مرتين في كشف الرواتب.
+   - يوم الجزاء يخصم ساعات يوم الجزاء (افتراضياً 4 ساعات).
+   - إذا كان صافي ساعات العمل بالسالب، يظهر الراتب المستحق بقيمة `0 د.ع` مع شارة تنبيه "ساعات سالبة" (لا يظهر راتب سالب أبداً).
+6. **العطلات الرسمية وأيام نهاية الأسبوع**:
+   تحديد أيام العطلة الأسبوعية (افتراضياً يوم الجمعة) وتظهر مميزة في السجلات اليومية والتقرير الشهري بدلاً من الإشارة إلى غياب أو عدم تسجيل.
+
+---
+
+## 💾 Data Management, Backup & Reset (إدارة البيانات والنسخ الاحتياطي)
+
+من صفحة **الإعدادات (Settings) > إدارة البيانات**:
+- **تصدير نسخة كاملة (Export JSON)**: تنزيل نسخة احتياطية لكافة الموظفين وسجلات الحضور والجزاءات والمستخدمين في ملف JSON.
+- **استيراد نسخة (Import JSON)**: استعادة نسخة احتياطية سابقة بضغطة زر.
+- **المزامنة مع GitHub (GitHub Sync)**: ربط التطبيق بمستودعك الخاص لحفظ وتحديث `data/db.json` مباشرة عبر GitHub Contents API دون الحاجة لأي خادم وسيط.
+- **حذف البيانات التجريبية (Delete Sample Data)**:
+  لحذف الموظفين الثمانية الافتراضيين وسجلات حضورهم وجزاءاتهم للبدء ببيانات واقعية جديدة، مع الحفاظ الكامل على إعداداتك وحسابات المستخدمين والموظفين الجدد.
+
+---
+
+## 🔄 Update Flow & Cache Invalidation (تحديث التطبيق)
+
+عند إجراء أي تحديثات أو تعديلات على الكود المصدري للتطبيق:
+1. افتح ملف `sw.js`.
+2. قم برفع رقم إصدار الكاش (مثال: من `dawam-cache-v1.5.0` إلى `dawam-cache-v1.5.1`).
+3. عند فتح المستخدم للتطبيق، سيقوم الـ Service Worker تلقائياً بتنزيل الملفات الجديدة وحذف الكاش القديم وتحديث واجهة المستخدم فورياً.
+
+---
+
+## 📊 التقارير والتصدير والطباعة (Reports & Export)
+
+- **كشف الحضور الشهري**: ملخص شامل لجميع الموظفين (حضور، تأخيرات، غيابات، ساعات نظامية، إضافي، خصومات، صافي، وراتب مستحق).
+- **التفاصيل اليومية**: استعراض تفاصيل كل يوم للموظف مع معرفة سبب الخصم والقاعدة المطبقة.
+- **تصدير إلى Excel (SheetJS)**:
+  تصدير تقرير احترافي باللغة العربية (RTL) يتضمن صفحة الملخص وصفحة التفاصيل اليومية الكاملة. يتم تحميل مكتبة التصدير لمرة واحدة وتخزينها في الكاش لتعمل دون اتصال بالإنترنت.
+- **الطباعة**: تصميم مخصص للطباعة على ورق A4 (تنسيق أفقي للملخص وعمودي لتفاصيل الموظف) بدون خلفيات النيون وبأعلى درجات الوضوح.
+
+---
+
+**دوام (Dawam)** — صُمم وطُوّر ليكون نظام الحضور الأكثر سرعة ودقة وكفاءة.

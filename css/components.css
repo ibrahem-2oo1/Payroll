@@ -720,5 +720,196 @@
   }
 }
 
+/* ==========================================================================
+   Report Page Specific Components & Print Layout
+   ========================================================================== */
+.report-filters-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+  padding: 0.75rem 1rem;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.report-controls-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.report-table-wrapper {
+  max-height: 72vh;
+  overflow: auto;
+  position: relative;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.report-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-surface-elevated);
+  white-space: nowrap;
+}
+
+.report-table th.col-sticky-emp,
+.report-table td.col-sticky-emp {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 5;
+  background: var(--bg-surface-elevated);
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.4);
+}
+
+.report-table thead th.col-sticky-emp {
+  z-index: 15;
+}
+
+.report-table tr.row-totals {
+  position: sticky;
+  bottom: 0;
+  z-index: 8;
+  background: var(--bg-surface-elevated);
+  border-top: 2px solid var(--neon-cyan);
+  font-weight: 700;
+}
+
+.report-table tr.row-totals td.col-sticky-emp {
+  z-index: 12;
+}
+
+.report-table tbody tr.clickable-row {
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.report-table tbody tr.clickable-row:hover {
+  background: rgba(0, 240, 255, 0.08);
+}
+
+.report-card-mobile {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.report-card-mobile:hover,
+.report-card-mobile:active {
+  border-color: var(--neon-cyan);
+  background: rgba(0, 240, 255, 0.04);
+}
+
+.badge-norecord {
+  background: rgba(136, 153, 181, 0.15) !important;
+  color: var(--text-muted) !important;
+  border: 1px dashed rgba(136, 153, 181, 0.4) !important;
+}
+
+.status-weekend-dim {
+  opacity: 0.55;
+  font-style: italic;
+}
+
+.text-negative {
+  color: var(--neon-red) !important;
+  font-weight: 700;
+}
+
+@media (min-width: 900px) {
+  .report-mobile-view {
+    display: none !important;
+  }
+}
+
+@media (max-width: 899px) {
+  .report-desktop-view {
+    display: none !important;
+  }
+}
+
+/* Print Layout */
+@media print {
+  .app-header,
+  .sidebar,
+  .tab-bar,
+  .page-header button,
+  .report-filters-bar,
+  .no-print,
+  #btn-back-to-summary,
+  #btn-print-report,
+  #btn-print-breakdown {
+    display: none !important;
+  }
+
+  body, html, .app-shell, .main-content, .page-container, .card, .table-container, .report-table-wrapper {
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .card-header, .card-body {
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  .table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    font-size: 8pt !important;
+    color: #000000 !important;
+  }
+
+  .table th, .table td {
+    border: 1px solid #777 !important;
+    padding: 4px 6px !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .table th {
+    background: #f0f0f0 !important;
+    font-weight: 700 !important;
+  }
+
+  .badge {
+    border: 1px solid #999 !important;
+    color: #000000 !important;
+    background: transparent !important;
+  }
+
+  .report-mobile-view {
+    display: none !important;
+  }
+
+  .report-desktop-view {
+    display: block !important;
+  }
+
+  tr {
+    page-break-inside: avoid;
+  }
+
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+}
+
 
 

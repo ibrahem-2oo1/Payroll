@@ -63,6 +63,20 @@ export function minToHHMM(totalMinutes) {
 }
 
 /**
+ * Formats minutes into "h:mm" format (e.g. "162:30", "0:00", "-2:30").
+ * @param {number} totalMinutes
+ * @returns {string}
+ */
+export function formatHoursMinutes(totalMinutes) {
+  if (isNaN(totalMinutes) || totalMinutes === null) return '0:00';
+  const isNegative = totalMinutes < 0;
+  const absMin = Math.abs(Math.round(totalMinutes));
+  const h = Math.floor(absMin / 60);
+  const m = String(absMin % 60).padStart(2, '0');
+  return `${isNegative ? '-' : ''}${h}:${m}`;
+}
+
+/**
  * Formats minutes into human-readable label e.g. "7 س 30 د" or "7h 30m".
  * @param {number} totalMinutes
  * @param {string} [lang='ar']

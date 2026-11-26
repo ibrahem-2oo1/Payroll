@@ -51,7 +51,7 @@ export async function initStore() {
 }
 
 function ensureSchema(db) {
-  if (!db.meta) db.meta = { version: 2, updatedAt: nowLocalStamp() };
+  if (!db.meta) db.meta = { version: 3, updatedAt: nowLocalStamp() };
   if (!db.settings) db.settings = {};
   if (!Array.isArray(db.users)) db.users = [];
   if (!Array.isArray(db.employees)) db.employees = [];
@@ -62,13 +62,26 @@ function ensureSchema(db) {
   if ((db.meta.version || 1) < 2) {
     db.settings.leavePaid = false;
     db.settings.lateCounterReset = 'monthly';
-    db.meta.version = 2;
+  }
+
+  // Migration for version < 3
+  if ((db.meta.version || 1) < 3) {
+    if (!Array.isArray(db.settings.weekendDays)) {
+      db.settings.weekendDays = [5]; // Default Friday
+    }
+    const seedIds = ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8'];
+    db.employees.forEach(e => {
+      if (seedIds.includes(e.id) && e.sample === undefined) {
+        e.sample = true;
+      }
+    });
+    db.meta.version = 3;
   }
 }
 
 function getFallbackSchema() {
   return {
-    meta: { version: 2, updatedAt: nowLocalStamp() },
+    meta: { version: 3, updatedAt: nowLocalStamp() },
     settings: {
       shiftStart: '08:00',
       shiftEnd: '16:00',
@@ -80,6 +93,7 @@ function getFallbackSchema() {
       absentDayHours: 8,
       leavePaid: false,
       lateCounterReset: 'monthly',
+      weekendDays: [5],
       lateRules: [
         { id: 'r1', type: 'late_x', factor: 2, hours: 0, label: 'ضعف التأخير (×2)' },
         { id: 'r2', type: 'late_x', factor: 3, hours: 0, label: 'ثلاثة أضعاف التأخير (×3)' },
@@ -359,4 +373,35 @@ export async function syncToGitHub({ owner, repo, path, branch = 'main', token }
   } catch (err) {
     return { success: false, message: err.message };
   }
+}
+
+/**
+ * Removes seed/sample employees marked with sample: true and all their attendance and penalty records.
+ * Leaves custom added employees, settings, and users untouched.
+ * @returns {{ deletedEmployees: number, deletedAttendance: number, deletedPenalties: number }}
+ */
+export function deleteSampleData() {
+  const db = getDB();
+  const sampleEmpIds = new Set(
+    (db.employees || []).filter(e => e.sample === true).map(e => e.id)
+  );
+
+  if (sampleEmpIds.size === 0) {
+    return { deletedEmployees: 0, deletedAttendance: 0, deletedPenalties: 0 };
+  }
+
+  const initialEmployees = db.employees.length;
+  db.employees = db.employees.filter(e => !sampleEmpIds.has(e.id));
+  const deletedEmployees = initialEmployees - db.employees.length;
+
+  const initialAtt = db.attendance.length;
+  db.attendance = db.attendance.filter(a => !sampleEmpIds.has(a.employeeId));
+  const deletedAttendance = initialAtt - db.attendance.length;
+
+  const initialPen = db.penalties.length;
+  db.penalties = db.penalties.filter(p => !sampleEmpIds.has(p.employeeId));
+  const deletedPenalties = initialPen - db.penalties.length;
+
+  saveDB(db);
+  return { deletedEmployees, deletedAttendance, deletedPenalties };
 }

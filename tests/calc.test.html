@@ -374,6 +374,47 @@
             pass: res.ruleAmount === 60 && res.lateDeduction === 50 && res.regular === 440 && res.net === 390
           };
         }
+      },
+      {
+        name: '19. No double-counting of absences: 1 present (450) + 1 absent (480) -> netMonth = -30, not -510',
+        run: () => {
+          const mockDb = {
+            settings: defaultSettings,
+            employees: [{ id: 'e1', rate: 2500, active: true }],
+            attendance: [
+              { employeeId: 'e1', date: '2026-11-01', in: '08:00', out: '16:00', status: 'present' },
+              { employeeId: 'e1', date: '2026-11-02', status: 'absent' }
+            ],
+            penalties: []
+          };
+          const monthRes = buildMonth('e1', '2026-11', mockDb);
+          // 450 (present) - 480 (absent) = -30. absenceDeductions breakdown = 480.
+          return {
+            expected: 'netMonth: -30, absenceDeductions: 480',
+            actual: `netMonth: ${monthRes.totals.netMonth}, absenceDeductions: ${monthRes.totals.absenceDeductions}`,
+            pass: monthRes.totals.netMonth === -30 && monthRes.totals.absenceDeductions === 480
+          };
+        }
+      },
+      {
+        name: '20. Salary guard: negative netMonth -> salary is 0 (never negative)',
+        run: () => {
+          const mockDb = {
+            settings: defaultSettings,
+            employees: [{ id: 'e1', rate: 3000, active: true }],
+            attendance: [
+              { employeeId: 'e1', date: '2026-11-02', status: 'absent' }
+            ],
+            penalties: []
+          };
+          const monthRes = buildMonth('e1', '2026-11', mockDb);
+          // 1 absent day = -480 min. Rate 3000. Salary must be 0, not -24000.
+          return {
+            expected: 'netMonth: -480, salary: 0, hasNegativeNet: true',
+            actual: `netMonth: ${monthRes.totals.netMonth}, salary: ${monthRes.totals.salary}, hasNegativeNet: ${monthRes.totals.hasNegativeNet}`,
+            pass: monthRes.totals.netMonth === -480 && monthRes.totals.salary === 0 && monthRes.totals.hasNegativeNet === true
+          };
+        }
       }
     ];
 

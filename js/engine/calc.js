@@ -256,6 +256,13 @@ export function buildMonth(employeeId, yyyy_mm, db) {
 
   const employee = employees.find(e => e.id === employeeId);
   const rate = employee?.rate ? Number(employee.rate) : null;
+  const weekendDays = Array.isArray(settings.weekendDays) ? settings.weekendDays : [5];
+
+  // Month date range
+  const [yStr, mStr] = yyyy_mm.split('-');
+  const year = parseInt(yStr, 10);
+  const month = parseInt(mStr, 10);
+  const daysInMonth = new Date(year, month, 0).getDate();
 
   // Filter attendance for employee in month, sorted by date ascending
   const monthRecords = attendance
@@ -271,6 +278,7 @@ export function buildMonth(employeeId, yyyy_mm, db) {
   }
 
   const daysResults = [];
+  const recordByDate = new Map();
   let totalWorked = 0;
   let totalOtRaw = 0;
   let totalOt = 0;
@@ -305,10 +313,13 @@ export function buildMonth(employeeId, yyyy_mm, db) {
       dayResult = calcDay(record, settings, 0);
     }
 
-    daysResults.push({
+    const calculatedEntry = {
       ...record,
       calc: dayResult
-    });
+    };
+
+    daysResults.push(calculatedEntry);
+    recordByDate.set(record.date, calculatedEntry);
 
     totalWorked += dayResult.worked;
     totalOtRaw += dayResult.otRaw;
@@ -322,18 +333,69 @@ export function buildMonth(employeeId, yyyy_mm, db) {
   const monthPenalties = penalties.filter(p => p.employeeId === employeeId && p.date && p.date.startsWith(yyyy_mm));
   const totalPenaltyDays = monthPenalties.reduce((sum, p) => sum + Number(p.days || 0), 0);
   const penaltyDeduction = Math.round(totalPenaltyDays * Number(settings.penaltyDayHours || 4) * 60);
+  const penaltyHours = totalPenaltyDays * Number(settings.penaltyDayHours || 4);
 
-  // Grand Net Minutes
+  // Absence Deductions (DISPLAY ONLY breakdown: absent day net is ALREADY -absentDayHours*60 in totalNetDays)
+  const absenceDeductions = absentDays * Number(settings.absentDayHours || 8) * 60;
+
+  // Grand Net Minutes: netMonth = totalNetDays - penaltyDeduction
   const netMonth = totalNetDays - penaltyDeduction;
 
-  // Salary calculation
-  const salary = rate !== null ? Math.round((netMonth / 60) * rate) : null;
+  // Salary calculation: if netMonth < 0 -> 0 with negative hours flag (never negative salary)
+  const hasNegativeNet = netMonth < 0;
+  let salary = null;
+  if (rate !== null) {
+    salary = netMonth > 0 ? Math.round((netMonth / 60) * rate) : 0;
+  }
+
+  // Full calendar days for drill-down breakdown
+  const calendarDays = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dayStr = String(d).padStart(2, '0');
+    const dateStr = `${yyyy_mm}-${dayStr}`;
+    const dateObj = new Date(year, month - 1, d);
+    const weekday = dateObj.getDay(); // 0 = Sunday .. 6 = Saturday
+    const isWeekend = weekendDays.includes(weekday);
+
+    const recorded = recordByDate.get(dateStr);
+    const dayPenalties = monthPenalties.filter(p => p.date === dateStr);
+    const dayPenaltyDays = dayPenalties.reduce((sum, p) => sum + Number(p.days || 0), 0);
+
+    if (recorded) {
+      calendarDays.push({
+        date: dateStr,
+        dayNumber: d,
+        weekday,
+        isWeekend,
+        status: recorded.status || 'present',
+        record: recorded,
+        calc: recorded.calc,
+        penalties: dayPenalties,
+        hasPenalty: dayPenalties.length > 0,
+        penaltyDays: dayPenaltyDays
+      });
+    } else {
+      calendarDays.push({
+        date: dateStr,
+        dayNumber: d,
+        weekday,
+        isWeekend,
+        status: isWeekend ? 'weekend' : 'none',
+        record: null,
+        calc: null,
+        penalties: dayPenalties,
+        hasPenalty: dayPenalties.length > 0,
+        penaltyDays: dayPenaltyDays
+      });
+    }
+  }
 
   return {
     employeeId,
     month: yyyy_mm,
     employee,
     days: daysResults,
+    calendarDays,
     counts: {
       present: presentDays,
       late: lateDays,
@@ -346,10 +408,102 @@ export function buildMonth(employeeId, yyyy_mm, db) {
       otRaw: totalOtRaw,
       ot: totalOt,
       lateDeductions: totalLateDeductions,
+      absenceDeductions, // DISPLAY ONLY
       penaltyDeductions: penaltyDeduction,
+      penaltyHours,
       regular: totalRegular,
       netMonth,
-      salary
+      salary,
+      hasNegativeNet
     }
+  };
+}
+
+/**
+ * Builds the full report for all relevant employees in a given month.
+ * Includes active employees and any inactive employees with records that month.
+ * Computes grand totals across all employees.
+ * @param {string} yyyy_mm - "YYYY-MM"
+ * @param {object} db - Database object
+ * @param {string} [filterEmployeeId]
+ * @param {string} [filterDepartment]
+ * @returns {{ employeesReport: Array, grandTotals: object }}
+ */
+export function buildMonthReport(yyyy_mm, db, filterEmployeeId = null, filterDepartment = null) {
+  const employees = Array.isArray(db?.employees) ? db.employees : [];
+  const attendance = Array.isArray(db?.attendance) ? db.attendance : [];
+  const penalties = Array.isArray(db?.penalties) ? db.penalties : [];
+
+  const monthAttEmpIds = new Set(
+    attendance.filter(a => a.date && a.date.startsWith(yyyy_mm)).map(a => a.employeeId)
+  );
+  const monthPenEmpIds = new Set(
+    penalties.filter(p => p.date && p.date.startsWith(yyyy_mm)).map(p => p.employeeId)
+  );
+
+  let targetEmployees = employees.filter(e => {
+    return e.active !== false || monthAttEmpIds.has(e.id) || monthPenEmpIds.has(e.id);
+  });
+
+  if (filterEmployeeId) {
+    targetEmployees = targetEmployees.filter(e => e.id === filterEmployeeId);
+  }
+  if (filterDepartment) {
+    targetEmployees = targetEmployees.filter(e => e.department === filterDepartment);
+  }
+
+  // Sort employees by badge or name
+  targetEmployees.sort((a, b) => (a.badge || '').localeCompare(b.badge || '', undefined, { numeric: true }));
+
+  const employeesReport = targetEmployees.map(emp => buildMonth(emp.id, yyyy_mm, db));
+
+  // Compute Grand Totals
+  const grandTotals = {
+    employeeCount: employeesReport.length,
+    presentDays: 0,
+    lateDays: 0,
+    absentDays: 0,
+    leaveDays: 0,
+    penaltyDays: 0,
+    worked: 0,
+    regular: 0,
+    otRaw: 0,
+    ot: 0,
+    lateDeductions: 0,
+    absenceDeductions: 0,
+    penaltyDeductions: 0,
+    penaltyHours: 0,
+    netMonth: 0,
+    totalSalary: 0,
+    salaryEmployeeCount: 0
+  };
+
+  for (const rep of employeesReport) {
+    grandTotals.presentDays += rep.counts.present;
+    grandTotals.lateDays += rep.counts.late;
+    grandTotals.absentDays += rep.counts.absent;
+    grandTotals.leaveDays += rep.counts.leave;
+    grandTotals.penaltyDays += rep.counts.penaltyDays;
+
+    grandTotals.worked += rep.totals.worked;
+    grandTotals.regular += rep.totals.regular;
+    grandTotals.otRaw += rep.totals.otRaw;
+    grandTotals.ot += rep.totals.ot;
+    grandTotals.lateDeductions += rep.totals.lateDeductions;
+    grandTotals.absenceDeductions += rep.totals.absenceDeductions;
+    grandTotals.penaltyDeductions += rep.totals.penaltyDeductions;
+    grandTotals.penaltyHours += rep.totals.penaltyHours;
+    grandTotals.netMonth += rep.totals.netMonth;
+
+    if (rep.totals.salary !== null) {
+      grandTotals.totalSalary += rep.totals.salary;
+      grandTotals.salaryEmployeeCount++;
+    }
+  }
+
+  return {
+    month: yyyy_mm,
+    employeesReport,
+    grandTotals
   };
 }

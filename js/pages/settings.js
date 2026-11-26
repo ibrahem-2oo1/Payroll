@@ -115,6 +115,9 @@ function render() {
 
   const officialDayMin = calculateOfficialDayMinutes();
   const otExampleMin = calculateOTExampleMinutes();
+  if (!Array.isArray(state.weekendDays)) {
+    state.weekendDays = [5];
+  }
 
   currentContainer.innerHTML = `
     <div class="page-header mb-3" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
@@ -175,6 +178,30 @@ function render() {
           <span class="badge badge-leave font-num" id="badge-official-day-length" style="font-size: 0.95rem; padding: 0.4rem 0.8rem;">
             ${minToHoursLabel(officialDayMin, lang)} (${officialDayMin} ${t('common.minutes')})
           </span>
+        </div>
+
+        <!-- Weekend Days Toggles -->
+        <div class="mt-3 p-2" style="background: var(--bg-surface-elevated); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+          <label class="form-label mb-2" data-i18n="settings.weekendDays">🌴 ${t('settings.weekendDays')}</label>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;" id="weekend-days-toggles">
+            ${[
+              { num: 0, ar: 'الأحد', en: 'Sun' },
+              { num: 1, ar: 'الإثنين', en: 'Mon' },
+              { num: 2, ar: 'الثلاثاء', en: 'Tue' },
+              { num: 3, ar: 'الأربعاء', en: 'Wed' },
+              { num: 4, ar: 'الخميس', en: 'Thu' },
+              { num: 5, ar: 'الجمعة', en: 'Fri' },
+              { num: 6, ar: 'السبت', en: 'Sat' }
+            ].map(day => {
+              const isSelected = (state.weekendDays || []).includes(day.num);
+              return `
+                <button type="button" class="btn btn-sm ${isSelected ? 'btn-primary' : 'btn-secondary'} btn-weekend-toggle" data-day="${day.num}">
+                  ${lang === 'ar' ? day.ar : day.en} ${isSelected ? '✓' : ''}
+                </button>
+              `;
+            }).join('')}
+          </div>
+          <small class="text-muted" style="display: block; margin-top: 0.35rem;">الأيام المحددة تعتبر عطلة رسمية تظهر مميزة في كشوفات وسجلات الحضور</small>
         </div>
       </div>
     </div>
@@ -302,6 +329,11 @@ function render() {
           <input type="file" id="input-import-file" accept=".json" style="display: none;">
           <button type="button" class="btn btn-secondary" id="btn-trigger-import">
             📥 <span data-i18n="settings.importJSON">${t('settings.importJSON')}</span>
+          </button>
+
+          <!-- Delete Sample Data Button -->
+          <button type="button" class="btn btn-danger" id="btn-delete-sample-data">
+            🗑️ <span data-i18n="settings.deleteSampleData">${t('settings.deleteSampleData')}</span>
           </button>
         </div>
 
@@ -563,6 +595,9 @@ function updateComputedBadges() {
   const lang = getLang();
   const officialDayMin = calculateOfficialDayMinutes();
   const otExampleMin = calculateOTExampleMinutes();
+  if (!Array.isArray(state.weekendDays)) {
+    state.weekendDays = [5];
+  }
 
   const dayLengthBadge = currentContainer?.querySelector('#badge-official-day-length');
   if (dayLengthBadge) {
@@ -783,6 +818,43 @@ function attachEventListeners() {
     } else {
       ui.toast(`${t('settings.ghSyncFailed')}${res.message}`, 'error');
     }
+  });
+
+  // Weekend days toggles
+  currentContainer.querySelectorAll('.btn-weekend-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const dayNum = parseInt(btn.dataset.day, 10);
+      state.weekendDays = Array.isArray(state.weekendDays) ? state.weekendDays : [5];
+      if (state.weekendDays.includes(dayNum)) {
+        state.weekendDays = state.weekendDays.filter(d => d !== dayNum);
+      } else {
+        state.weekendDays.push(dayNum);
+        state.weekendDays.sort((a, b) => a - b);
+      }
+      checkDirty();
+      render();
+    });
+  });
+
+  // Delete Sample Data button
+  currentContainer.querySelector('#btn-delete-sample-data')?.addEventListener('click', async () => {
+    const confirmed = await ui.confirm({
+      title: t('settings.deleteSampleData') || 'حذف البيانات التجريبية',
+      message: t('settings.deleteSampleConfirm') || 'هل أنت متأكد من حذف البيانات التجريبية (الموظفين الافتراضيين وسجلات حضورهم وجزاءاتهم)؟ لن تتأثر حسابات المستخدمين أو الموظفون الجدد أو الإعدادات.',
+      confirmText: t('common.delete') || 'حذف',
+      cancelText: t('common.cancel') || 'إلغاء',
+      danger: true
+    });
+
+    if (!confirmed) return;
+
+    const res = store.deleteSampleData();
+    if (res.deletedEmployees > 0) {
+      ui.toast(`تم حذف البيانات التجريبية بنجاح (${res.deletedEmployees} موظفاً، ${res.deletedAttendance} سجل حضور)`, 'success');
+    } else {
+      ui.toast('لم يتم العثور على أي بيانات تجريبية لحذفها', 'info');
+    }
+    render();
   });
 
   // Rules list interactions
